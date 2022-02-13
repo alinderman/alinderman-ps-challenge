@@ -71,57 +71,61 @@ const scores = []
 
 // Extract information from each document
 addressFile.split(/\r?\n/).forEach(line =>  {
-  addresses.push([line.match(ADDRESS_RE)[1], false])
+    addresses.push([line.match(ADDRESS_RE)[1], false])
 });
 
 driverFile.split(/\r?\n/).forEach(line =>  {
-  let consonants = line.match(CONSONANT_RE)
-  let vowels = line.match(VOWEL_RE)
+    const consonants = line.match(CONSONANT_RE)
+    const vowels = line.match(VOWEL_RE)
 
-  drivers.push([line, vowels.length, consonants.length, primeFactors(line.length), false])
+    drivers.push([line, vowels.length, consonants.length, primeFactors(line.length), false])
 });
 
 // For each combination of driver and address, calculate the score
 addresses.forEach((address, aIndex) => {
-	let aFactors = [...primeFactors(address[ADDRESS_INDEX].length)]
-	let aScores = []
+    const aFactors = [...primeFactors(address[ADDRESS_INDEX].length)]
+    const aScores = []
 
-	let even = address[ADDRESS_INDEX].length % 2 == 0
-	drivers.forEach((driver, dIndex) => {
-		let score = 0
-		if (even) {
-			score = driver[DRIVER_VOWEL_COUNT_INDEX] * 1.5
-		} else {
-			score = driver[DRIVER_CONSONANT_COUNT_INDEX]
-		}
-		if (aFactors.some(f => driver[DRIVER_FACTOR_INDEX].has(f))) {
-			score = score * 1.5
-		}
-		scores.push([score, aIndex, dIndex])
-	})
+    let even = address[ADDRESS_INDEX].length % 2 == 0
+    drivers.forEach((driver, dIndex) => {
+        let score = 0
+        if (even) {
+            score = driver[DRIVER_VOWEL_COUNT_INDEX] * 1.5
+        } else {
+            score = driver[DRIVER_CONSONANT_COUNT_INDEX]
+        }
+        if (aFactors.some(f => driver[DRIVER_FACTOR_INDEX].has(f))) {
+            score = score * 1.5
+        }
+        scores.push([score, aIndex, dIndex])
+    })
 })
 
 // Sort the entire list of scores from high to low
 scores.sort((score1, score2) => {
-	return score2[SCORE_INDEX] - score1[SCORE_INDEX]
+    return score2[SCORE_INDEX] - score1[SCORE_INDEX]
 })
 
 // Iterate down the list of scores until all addresses have a driver.
 // Starting from the highest score and working our way through the list
 // until we find a unique combination for each address ensures we get 
 // the highest possible score.
-let assignments = []
+const assignments = []
+let totalScore = 0
 scores.forEach(score => {
-	const addressIndex = score[SCORE_ADDRESS_INDEX], driverIndex = score[SCORE_DRIVER_INDEX]
-	const address = addresses[addressIndex], driver = drivers[driverIndex]
-	const addressReady = !address[ADDRESS_FLAG_INDEX], 
-		driverReady = !driver[DRIVER_FLAG_INDEX]
+    const addressIndex = score[SCORE_ADDRESS_INDEX], driverIndex = score[SCORE_DRIVER_INDEX]
+    const address = addresses[addressIndex], driver = drivers[driverIndex]
+    const addressReady = !address[ADDRESS_FLAG_INDEX],
+        driverReady = !driver[DRIVER_FLAG_INDEX]
 
-	if (addressReady && driverReady) {
-		address[ADDRESS_FLAG_INDEX] = true
-		driver[DRIVER_FLAG_INDEX] = true
-		assignments.push([addressIndex, driverIndex])
-		console.log(`Assigning ${driver[DRIVER_NAME_INDEX]} to ${address[ADDRESS_INDEX]}: ${score[SCORE_INDEX]}`)
-	}
+    if (addressReady && driverReady) {
+        address[ADDRESS_FLAG_INDEX] = true
+        driver[DRIVER_FLAG_INDEX] = true
+        assignments.push([addressIndex, driverIndex])
+        totalScore += score[SCORE_INDEX]
+        console.log(`Assigning ${driver[DRIVER_NAME_INDEX]} to ${address[ADDRESS_INDEX]}: ${score[SCORE_INDEX]}`)
+    }
 })
+
+console.log(`Max Score: ${totalScore}`)
 
